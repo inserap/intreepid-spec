@@ -1,0 +1,61 @@
+# Local Claude settings (per-user, never shared)
+.claude/settings.local.json
+
+# Ephemeral design and plan working files (every slice — incl. the bootstrap slice itself)
+# Must be deleted before commit; gitignore is the safety net, the rule is "delete, don't rely on gitignore"
+docs/superpowers/specs/*-design.md
+docs/superpowers/plans/*-implementation.md
+
+# Secrets and credentials (NEVER commit)
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+credentials.json
+config.local.*
+
+# Databases (often contain sensitive data)
+*.sqlite
+*.sqlite3
+*.db
+
+# OS artifacts
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# IDE
+.idea/
+.vscode/*.code-workspace.user
+*.swp
+*.swo
+
+# Python (in case the project includes Python code)
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+
+# Node.js (in case the project includes JS/TS code)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.next/
+.nuxt/
+dist/
+
+# Logs
+*.log
+logs/
