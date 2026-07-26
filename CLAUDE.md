@@ -24,11 +24,14 @@ This spec's path resolution lives in [`repository-topology.md`](repository-topol
 
 ## Project-specific invariants
 
-<-- list of N project-specific invariants, or "None yet — see decisions/ as they emerge" -->
+- **Architecture reference** lives in `<IMPL:src>/docs/architecture/overview.md`. Any change to it is a new version with a changelog line — never a silent edit.
+- **Component admission rule**: a component must either speed up iteration or solidify knowledge. Otherwise it stays out.
+- **Read-only on source data** (P2/P3): agents never ingest raw rows and never mutate sources; access is through MCP tools (profiles, aggregates, samples). Sensitive data is pseudonymised upstream (FME) — see also I-5.
+- **Hard rule**: no next architecture version before a first real discovery session on real data. Spec must precede a walking skeleton, not replace it.
 
 ## Project-specific anti-patterns
 
-<-- list of project-specific anti-patterns, or "None yet" -->
+- **The Henry/Algiz pattern**: fully specifying an architecture without ever implementing it (Tier 1 complete, Tier 2 never started). A spec with no implementation is an alarm, not an achievement — cross the whole system minimally first. See ADR-0005.
 
 ## Project overrides — language (if any)
 
