@@ -13,9 +13,11 @@
 
 ## Remote git (optional)
 
-- Spec : `no remote — local only`
+- Spec : `origin` → `https://github.com/inserap/intreepid-spec.git` (**privé**)
 - Standards : `n/a — local clone`
-- Impl(s) : `src` → `no remote`
+- Impl(s) : `src` → `origin` → `https://github.com/inserap/intreepid-src.git` (**privé**)
+
+> Repos **privés** par défaut. Aucune publication publique n'est prévue ; une éventuelle exposition n'est que temporaire (p. ex. donner accès à un LLM externe pour revue) et ne change ni le rôle du `spec` (process artifact à consommateur unique, cf. ADR-0002) ni l'absence de README côté `spec`.
 
 ## Conventions de référencement
 
