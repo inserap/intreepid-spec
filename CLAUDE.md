@@ -26,6 +26,7 @@ This spec's path resolution lives in [`repository-topology.md`](repository-topol
 
 - **Architecture reference** lives in `<IMPL:src>/docs/architecture/overview.md`. Any change to it is a new version with a changelog line — never a silent edit.
 - **Component admission rule**: a component must either speed up iteration or solidify knowledge. Otherwise it stays out.
+- **Plus-value visibility test** (v1 scope rule, companion to the admission rule): every v1 deliverable must answer *"what would a generic LLM client wired to a DuckDB MCP not provide?"* If the answer is "nothing", it is WOW theatre, not value — it stays out. Source: journal 2026-07-27, ADR-0007 context.
 - **Read-only on source data** (P2/P3): agents never ingest raw rows and never mutate sources; access is through MCP tools (profiles, aggregates, samples). Sensitive data is pseudonymised upstream (FME) — see also I-5.
 - **Hard rule**: no next architecture version before a first real discovery session on real data. Spec must precede a walking skeleton, not replace it.
 
