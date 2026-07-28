@@ -38,6 +38,10 @@ This spec's path resolution lives in [`repository-topology.md`](repository-topol
 
 <-- If the project overrides the standards language tier-list, declare it here with a justifying ADR pointer -->
 
+## Project overrides — code quality
+
+- **`src` : pyright `typeCheckingMode = "standard"`** au lieu du défaut `strict` de `standards@0.7.0`. Déviation d'un cran, justifiée par [ADR-0008](decisions/0008-code-quality-deviation-pyright-standard.md) : la stack maison (DuckDB/FastMCP/Agent SDK/PyYAML) est sans stubs → `strict` = bruit de propagation d'`Unknown` en frontière. `ruff` + `pytest` restent pleins. Ratchet vers `strict` planifié (wrappers typés).
+
 ## Universal reminders
 
 The full universal anti-pattern list lives in `<STANDARDS>/anti-patterns/`. Recurring reminders :
