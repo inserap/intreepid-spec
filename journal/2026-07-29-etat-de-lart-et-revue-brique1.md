@@ -96,3 +96,82 @@ la brique #1: …")`. Le message signale bien le périmètre brique #1 ; ce qu'i
 - Brique #1 : `slices/2026-07-28-01-brique1-profile-stats-execution.md`
 - Vision : `<IMPL:src>/docs/architecture/overview.md` (§4.2 `profile_stats`)
 - Journaux liés : `2026-07-28-brique1-walking-skeleton.md`, `2026-07-27-plus-value-et-depart-a-froid.md`
+
+---
+
+## 6. Suite de session — cadrage de la brique #2
+
+- **Décision : enchaîner la brique #2 sans attendre la clôture de Q-0002.** La séance métier
+  est à ~10 jours ; on continue d'implémenter pour progresser. **Clarification de la règle dure** :
+  elle porte sur les *versions d'architecture* (« pas de v0.3 de l'`overview` avant une session de
+  découverte réelle »), **pas** sur l'implémentation de briques de l'architecture v0.2 existante.
+  Compléter `profile_stats` reste du walking skeleton v0.2 → légitime. Q-0002 demeure le verrou de
+  la **valeur**, pas du **code**. (Correction assumée : j'avais sur-appliqué la règle dure.)
+- **Pas de backlog** (choix explicite). Le mécanisme « ne rien perdre » = le prompt de démarrage
+  ci-dessous, qui porte lui-même les 3 items + tous les pointeurs.
+- **Périmètre pressenti de la brique #2** (le brainstorming tranchera l'ampleur exacte —
+  temporel+spatial ensemble ou spatial en brique #3) :
+  1. Type **temporel** `_temporal` (bornes, trous de série, saisonnalité, ruptures de volume).
+  2. Type **spatial** `_spatial` (emprise, densité/région, plus proche voisin, géométries invalides).
+  3. Passagers de dette brique #1 : **skewness** manquant dans `_numeric` ; `bounds.py`
+     `mkdtemp` → `TemporaryDirectory`. Les types non couverts → message explicite (pas générique).
+
+### Prompt de démarrage de la brique #2 (à coller dans une nouvelle session)
+
+```text
+Brique #2 — compléter `profile_stats` aux 4 types de colonnes (temporel + spatial)
++ solder 2 dettes de la brique #1.
+
+Cadre : je pilote intreepid depuis le spec. On enchaîne sur la brique #2 SANS attendre
+Q-0002 (séance métier dans ~10 jours) — c'est légitime : la « règle dure » du projet porte
+sur les VERSIONS d'architecture (pas de v0.3 de l'overview avant données réelles), pas sur
+l'implémentation de briques de l'architecture v0.2 existante. On reste dans le walking
+skeleton v0.2.
+
+1) Initie la session selon CLAUDE.md (rituel de session-start complet) AVANT toute autre chose.
+
+2) Objectif — le profileur ne couvre aujourd'hui que 2/4 des types de l'overview §4.2
+   (`categorical`, `numeric`). Cette brique ajoute les 2 manquants et solde 2 dettes :
+   - TYPE temporel `_temporal` : bornes, trous de série, saisonnalité grossière, ruptures de
+     volume (les changements de collecte doivent se voir).
+   - TYPE spatial `_spatial` : emprise (ST_Extent), densité par région, distance au plus proche
+     voisin, taux de géométries invalides — via l'extension DuckDB spatial.
+   - PASSAGER 1 (dette brique #1) : `skewness` absent dans `_numeric` alors que §4.2 le liste
+     (DuckDB expose `skewness()` — une ligne).
+   - PASSAGER 2 (dette brique #1) : `mcp_server/bounds.py` — remplacer `tempfile.mkdtemp()` sans
+     nettoyage par un `TemporaryDirectory` (context manager), même en serveur long-lived.
+   - Corollaire : le `ValueError("… non supporté dans la brique #1")` de `profile_stats.py`
+     disparaît pour ces types ; pour tout type restant non couvert, message explicite
+     « prévu / non implémenté » (pas un message générique qui masque l'intention).
+
+3) À VÉRIFIER en phase design (ne rien présumer) : `fixtures/accidents_seed.parquet` +
+   `accidents.fiche.yaml` contiennent-ils des colonnes de date et de géométrie exploitables ?
+   Sinon, étendre la fixture (open data OFROU anonymisé) + la fiche, et planter des anomalies
+   temporelles/spatiales pour l'oracle (ex. trou de série, géométrie invalide, code sentinelle).
+
+4) Discipline NON négociable (leçons de la brique #1) :
+   - superpowers:brainstorming AVANT tout code — le design tranche le périmètre exact : temporel
+     ET spatial ensemble, ou spatial reporté en brique #3 si trop large (walking skeleton : croiser
+     minimalement d'abord).
+   - writing-plans → au moins une passe advisor jusqu'au verdict SHIP (NE PAS sauter les passes
+     advisor — faute commise en brique #1).
+   - TDD + subagent-driven-development ; gate qualité vert (ruff / pyright `standard` / pytest)
+     avant chaque commit ; `git add` et `git commit` en DEUX étapes ; jamais de tag/push autonome.
+   - Étendre l'oracle `tests/test_agent_eval.py` : l'agent doit remonter un fait temporel/spatial
+     authentique ET refuser un faux pattern, sans lire de lignes brutes (P2).
+
+5) Contexte durable à relire (pour ne rien perdre) :
+   - Revue + décisions actées : journal/2026-07-29-etat-de-lart-et-revue-brique1.md
+   - Dette/minors brique #1 : slices/2026-07-28-01-brique1-profile-stats-execution.md
+     (sections « Minors différés » + « Follow-ups »)
+   - Spec cible : <IMPL:src>/docs/architecture/overview.md §4.2 (tableau des 4 types)
+   - Rigueur (Q-0009) + briques réutilisables de la veille research/2026-07-29-etat-de-lart-github.md :
+     pysal/esda (emprise/autocorrélation spatiale), overnin/h3-mcp (H3), whylogs / ing-bank/popmon
+     (dérive temporelle) — INSPIRATION de sortie seulement ; `profile_stats` reste écrit en SQL
+     DuckDB pushdown, pas de dépendance embarquée.
+   - Q-0014 (sortie structurée du verdict) : NE PAS traiter ici, SAUF si on touche verdict.py /
+     charter.md ; sinon la laisser ouverte.
+
+6) Hors périmètre explicite (briques ultérieures) : multi-dataset (catalog reste mono-dataset),
+   croisé à la demande, modèle nul, couche ML, UI.
+```
