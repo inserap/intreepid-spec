@@ -2,9 +2,10 @@
 .claude/settings.local.json
 
 # Ephemeral design and plan working files (every slice — incl. the bootstrap slice itself)
-# Must be deleted before commit; gitignore is the safety net, the rule is "delete, don't rely on gitignore"
-docs/superpowers/specs/*-design.md
-docs/superpowers/plans/*-implementation.md
+# Must be deleted before commit; gitignore is the safety net, the rule is "delete, don't rely on gitignore".
+# Ignore the WHOLE dirs (not by name suffix) — a plan named without `-implementation` slipped through otherwise.
+docs/superpowers/specs/
+docs/superpowers/plans/
 
 # Secrets and credentials (NEVER commit)
 .env

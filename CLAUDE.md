@@ -42,6 +42,14 @@ This spec's path resolution lives in [`repository-topology.md`](repository-topol
 
 - **`src` : pyright `typeCheckingMode = "standard"`** au lieu du défaut `strict` de `standards@0.7.0`. Déviation d'un cran, justifiée par [ADR-0008](decisions/0008-code-quality-deviation-pyright-standard.md) : la stack maison (DuckDB/FastMCP/Agent SDK/PyYAML) est sans stubs → `strict` = bruit de propagation d'`Unknown` en frontière. `ruff` + `pytest` restent pleins. Ratchet vers `strict` planifié (wrappers typés).
 
+## Project workflow conventions (raffine la phase « ship » de `<STANDARDS>/workflow/08-ship-and-recap.md`)
+
+> Conventions **projet-local**, validées à l'usage sur intreepid. **Candidats de promotion** vers `standards/` — à arbitrer par une *revue d'usage de standards* conduite depuis `methods/spec` (mécanisme pull, cf. journal 2026-07-30), pas par une mutation de standards depuis une session projet.
+
+- **Démo = gate de validation humaine AVANT le merge final.** Quand la slice produit un livrable démontrable, son **scénario de démo** (runbook `src/demo/brique-N-*.md` + driver `demo.py`) est produit **pendant l'implémentation**, et la démo est **lancée avant le merge** : c'est la démo, pas seulement les tests verts, que l'humain valide. (Leçon brique #2 : la démo a révélé un spoiler de fiche et un argument métier fragile — mieux vaut avant le merge.)
+- **CHANGELOG + tag en DERNIER commit, APRÈS le merge.** Le bump de version + l'entrée CHANGELOG + le tag SemVer ne vivent pas sur la branche avant merge : ils forment un **commit final distinct sur `main` après le merge**, pour que le commit de merge reflète le code revu et que les métadonnées de release soient un pas auditable séparé. (`git tag` reste user-driven — I-3.)
+- Ordre de la phase ship : revue finale SHIP → **scénario de démo** → **démo (gate humain)** → **merge** → **CHANGELOG + tag (commit final post-merge)** → execution recap + journal.
+
 ## Universal reminders
 
 The full universal anti-pattern list lives in `<STANDARDS>/anti-patterns/`. Recurring reminders :
