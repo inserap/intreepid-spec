@@ -6,7 +6,9 @@
 > la **base atteinte sans aide** (v0.12.0), celle-ci le **premier essai de réduction de coût**.
 > Fiche produite : [`2026-08-06-RoadTrafficAccidentLocations.fiche.v3.yaml`](2026-08-06-RoadTrafficAccidentLocations.fiche.v3.yaml)
 > (hash `ca40080edb96`). Trace : `<IMPL:src>/traces/curator-785a2ccd.duckdb`.
-> Branche `brique-10-brouillon-incremental`, **non mergée** (garde-fou D5).
+> Branche `brique-10-brouillon-incremental` : gate **échoué** (garde-fou D5), puis **mergée le 07/08
+> sur décision d'Alex** — non pas comme un livrable, mais comme le **prérequis** de la structure en
+> deux appels (§ 8.3). Le verdict du gate reste ce qu'il est ; c'est sa portée qui a changé.
 
 ## 1. Verdict : échoué, 2 critères sur 5
 
@@ -328,8 +330,9 @@ souhaitez-vous corriger ou préciser un point avant clôture ?
 
 ## 8. POINTEUR DE REPRISE — la structure en deux appels
 
-> État : branche `brique-10-brouillon-incremental` **ouverte, non mergée**, 7 commits sur `671f25d`,
-> gate déterministe vert (188 tests, pyright 0). `main` intacte à v0.12.0.
+> État : branche `brique-10-brouillon-incremental` **mergée le 07/08** (7 commits, gate déterministe
+> vert — 188 tests, pyright 0). Elle est le **prérequis** de la structure décrite en § 8.3, pas un
+> livrable en soi : son gate a échoué et elle est neutre sur le temps.
 > Cette section **remplace** un premier pointeur écrit le même jour, qui cadrait le problème en
 > termes de **coût**. Alex a recadré : l'objectif n'est ni l'économie ni le prix, c'est **la maîtrise
 > des appels et de leur contenu**, et **le temps** — parce que le travail vise des **centaines** de
@@ -411,6 +414,19 @@ qui ne servaient pas la compréhension — au 04/08 l'humain répondait déjà �
 
 **Faire du gabarit un vrai tour du 04/08**, et retirer ces trois prescriptions. C'est un retrait, et
 il attaque directement les 107 s de prose.
+
+**Un quatrième retrait, relevé par Alex le 07/08 : un plafond déguisé.** La règle de seuil se termine
+par « Ne fais JAMAIS une passe colonne par colonne : **quelques questions structurantes suffisent,
+même pour plusieurs dizaines de colonnes.** » La première moitié est le critère et elle reste — c'est
+elle qui empêche le retour du comportement robotique de v0.10.0. La seconde est une **prescription de
+volume**, pas un critère, et elle contredit le principe déjà écrit au design de #10 : *le nombre de
+questions est une conséquence, jamais un réglage.* **Il n'y a pas de nombre de questions correct.**
+Cent questions sur un jeu sont légitimes si cent jugements exigent une autorité que le profil n'a
+pas. À retirer.
+
+*Note d'observation* : le nombre de questions n'a pas bougé entre les deux séances (4 → 4), mais leur
+**composition** a changé — les quatre du soir sont toutes des jugements de périmètre ou de grain,
+exactement ce que la distinction information/autorité visait. Cohérent avec un effet, pas une preuve.
 
 ### 8.5 La fiche : une régression à réparer, et un contrat qui n'a jamais existé
 
@@ -537,3 +553,26 @@ Cumul attendu, les leviers étant indépendants :
 - **Le critère « delta ÷ fiche » est flatté par un dénominateur qui grossit** : à taille de fiche
   constante, le ratio du 06/08 soir vaut **2,1** et non 1,2. Le seul chiffre honnête est le brouillon
   émis, **−36 %**.
+
+### 8.9 Le mur résiduel : l'attention humaine, et la seule piste qui l'entame
+
+Une fois les quatre leviers appliqués, le temps de génération tombe vers 150-250 s. **Ce qui reste
+est l'attention humaine**, et aucune optimisation du curateur ne l'entame.
+
+Et le §8.4 aggrave le calcul plutôt qu'il ne l'allège : si l'agent pose légitimement cent questions
+sur un jeu complexe, 300 couches font **30 000 décisions humaines**. « Pas de limite » est juste
+comme règle et intenable comme résultat.
+
+**La sortie n'est pas un quota. C'est que beaucoup de questions ne portent pas sur *ce* jeu.**
+Le référentiel LV95, les codes OFS millésimés, le motif de sentinelle `at0`/`at00`, le grain
+accident-vs-victime : ce sont des **conventions du producteur**, pas des propriétés du fichier.
+Répondues une fois, elles valent pour **toutes les couches du même producteur**.
+
+Piste, non cadrée : une **mémoire de curation par producteur**, que l'agent consulte avant de poser
+une question — si la convention est déjà ratifiée ailleurs, il la reprend et la signale au lieu de la
+redemander. C'est le même mouvement que la fiche « confluent des faits-donnée » de Q-0004, appliqué
+aux **décisions de curation** au lieu des faits d'analyse.
+
+**Ne pas construire ça avant d'avoir un second jeu du même producteur** : sans deux couches réelles,
+c'est une cathédrale. Le premier pas honnête est d'observer, sur la deuxième couche OFROU curée,
+combien de questions sont des redites de la première.
