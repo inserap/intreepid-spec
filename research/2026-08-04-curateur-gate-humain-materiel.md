@@ -3,6 +3,13 @@
 > Note de référence produite au session-end du 2026-08-04. **Input de la slice
 > conversationnelle dédiée** (Q-0022). Capture le finding + le transcript réel
 > (gold-standard) + un pointeur vers la fiche produite.
+>
+> **Suite (2026-08-06)** : Q-0022 est **résolue** — le niveau décrit ici est désormais actif par
+> défaut, sans précision live. Voir le pendant de cette note :
+> [`2026-08-06-curateur-gate-materiel.md`](2026-08-06-curateur-gate-materiel.md). Distinction à
+> garder : **ce document reste la référence de concision** (~678 car. par tour) ; le v2 est la
+> référence de ce que la charte délivre **seule** (2 130-3 367 car. de prose par tour). Les faire
+> converger est l'objet de la slice de tuning.
 
 ## 1. Le finding : une hiérarchie claire de qualité conversationnelle
 
@@ -38,6 +45,13 @@ curateur **révèle un piège que l'humain n'avait pas identifié** (le millési
 codes communaux) — la maïeutique *réalisée* (Q-0020), pas théorique.
 
 ## 3. Transcript réel (gold-standard) — 8 tours, fiche validée
+
+> **« Gold-standard », dit autrement : le transcript de référence.** Terme d'évaluation désignant une
+> sortie validée par un humain, contre laquelle on compare les suivantes. Ici : **cette** conversation
+> — celle où, après la précision live d'Alex, le curateur a basculé vers une curation experte. C'est
+> le niveau qu'on cherche à rendre actif **par défaut**. Les artefacts postérieurs au 2026-08-06
+> écrivent « transcript de référence » (le projet converse en français) ; le terme anglais subsiste
+> dans les documents antérieurs, dont celui-ci.
 
 > `>` = saisie humaine. Modèle : opus. Fiche validée (`curation_validated`,
 > hash `48e4743a79fb…`). La fiche produite est en

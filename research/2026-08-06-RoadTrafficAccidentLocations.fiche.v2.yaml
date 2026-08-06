@@ -1,0 +1,301 @@
+columns:
+  AccidentHour:
+    modalites: 24
+    note: 'Stockée en TEXTE avec zéro de tête (« 00 » à « 23 »). Les 24 heures sont
+      représentées, aucun code sentinelle type « 99 », aucun manquant. Pic à 17h (10,67
+      %), puis 16h (8,76 %) et 18h (7,27 %). Un cast en entier fait perdre le zéro
+      de tête et casse le tri lexicographique attendu par certains outils. Heure légale
+      suisse CET/CEST : conversion explicite obligatoire avant tout croisement avec
+      une source UTC (voir referentiel_temporel).'
+    role: heure locale de survenue, début de tranche horaire [h, h+1[
+    validation: question 4, option a
+  AccidentHour_text:
+    note: 'Format « 17h-18h », même distribution et même entropie que AccidentHour
+      : confirme que AccidentHour désigne le DÉBUT d''une tranche d''une heure, pas
+      un instant précis. Redondante avec AccidentHour, mais utile comme preuve de
+      la convention de tranche. Aucune minute n''est disponible ; il n''existe pas
+      de colonne de date complète.'
+    role: libellé d'intervalle horaire
+  AccidentInvolvingBicycle:
+    note: 'true 24,70 %. Non exclusif des autres indicateurs : un même accident peut
+      impliquer vélo et piéton, la somme des trois indicateurs dépasse le nombre d''accidents
+      concernés.'
+    role: indicateur booléen
+    tranche_sans_question: true
+  AccidentInvolvingMotorcycle:
+    note: 'true 20,91 %. Non exclusif. Aucun indicateur n''existe pour la voiture
+      : l''absence des trois true ne signifie pas « accident de voiture seule », seulement
+      « ni piéton, ni vélo, ni moto ».'
+    role: indicateur booléen
+    tranche_sans_question: true
+  AccidentInvolvingPedestrian:
+    note: 'true 11,53 %. Proche mais NON identique à la part du type at8 « accident
+      impliquant des piétons » (11,26 %) : les deux colonnes ne sont pas interchangeables,
+      l''indicateur est plus large que le type.'
+    role: indicateur booléen
+    tranche_sans_question: true
+  AccidentLocation_CHLV95_E:
+    note: 'null_rate 0, zero_rate 0, aucun outlier à 3 sigma : tous les points sont
+      renseignés et dans l''emprise suisse. Voir referentiel_spatial pour les règles
+      de reprojection.'
+    plage: 2 486 335 – 2 832 028 (médiane 2 650 691)
+    role: coordonnée est (easting) en mètres, EPSG:2056
+    validation: question 1, option a
+  AccidentLocation_CHLV95_N:
+    note: 'null_rate 0, zero_rate 0, aucun outlier à 3 sigma. E et N ne doivent jamais
+      être inversés : en LV95 l''est est toujours > 2 000 000 et le nord toujours
+      < 1 300 000.'
+    plage: 1 075 625 – 1 294 423 (médiane 1 220 866)
+    role: coordonnée nord (northing) en mètres, EPSG:2056
+    validation: question 1, option a
+  AccidentMonth:
+    note: 'Saisonnalité nette : juin 10,82 % contre février 5,65 %. Code cyclique,
+      pas une mesure : ne pas moyenner ; toute comparaison mensuelle doit tenir compte
+      du nombre de jours du mois.'
+    role: mois numérique 1-12
+    tranche_sans_question: true
+  AccidentMonth_de:
+    note: Redondante.
+    role: libellé allemand du mois
+  AccidentMonth_en:
+    note: Redondante.
+    role: libellé anglais du mois
+  AccidentMonth_fr:
+    note: 'Redondante. PIÈGE : tri alphabétique ≠ tri chronologique (avril avant janvier).'
+    role: libellé français du mois
+  AccidentMonth_it:
+    note: Redondante.
+    role: libellé italien du mois
+  AccidentSeverityCategory:
+    modalites: 3
+    note: 'as1 = accident avec tués (1,30 %), as2 = blessés graves (20,78 %), as3
+      = blessés légers (77,92 %). Ordre de gravité DÉCROISSANT quand le numéro croît
+      : un tri ou un max numérique naïf inverse la sévérité. La modalité qualifie
+      l''ACCIDENT, pas un nombre de victimes : aucune colonne de comptage de tués
+      ou de blessés n''existe, on ne peut donc compter que des accidents, jamais sommer
+      des victimes. Nomenclature exhaustive du périmètre corporel : pas de modalité
+      « dégâts matériels ».'
+    role: code catégoriel ordinal
+    validation: question 2, option a
+  AccidentSeverityCategory_de:
+    note: Redondante.
+    role: libellé allemand
+  AccidentSeverityCategory_en:
+    note: Redondante.
+    role: libellé anglais
+  AccidentSeverityCategory_fr:
+    note: 'Redondante : accident avec tués / blessés graves / blessés légers.'
+    role: libellé français
+  AccidentSeverityCategory_it:
+    note: Redondante.
+    role: libellé italien
+  AccidentType:
+    modalites: 11
+    note: 'Codes at0..at9 PLUS at00. at0 = dérapage/perte de maîtrise (33,05 %) ;
+      at00 = « autres » (0,92 %). PIÈGE : at0 et at00 sont deux modalités DISTINCTES
+      de sens totalement différent — tout cast numérique, trim de zéros ou jointure
+      sur un référentiel qui normalise les codes fusionne ~2 460 lignes dans la modalité
+      majoritaire. Traiter comme chaîne stricte.'
+    role: code catégoriel
+    tranche_sans_question: true
+  AccidentType_de:
+    note: Colonne redondante, même entropie 2,7844. Aucune information supplémentaire.
+    role: libellé allemand de AccidentType
+  AccidentType_en:
+    note: Redondante. Utile comme dictionnaire de décodage des codes atN.
+    role: libellé anglais de AccidentType
+  AccidentType_fr:
+    note: 'Redondante. Dictionnaire : at0 dérapage ou perte de maîtrise, at2 tamponnement,
+      at4 en s''engageant sur une route, at8 impliquant des piétons, at3 en quittant
+      une route, at5 en traversant une route, at1 dépassement/changement de voie,
+      at6 collision frontale, at7 en parquant, at00 autres, at9 impliquant des animaux.'
+    role: libellé français de AccidentType
+  AccidentType_it:
+    note: Redondante.
+    role: libellé italien de AccidentType
+  AccidentUID:
+    note: 'Cardinalité = 267 761 = nombre de lignes, uniformité 1,0 : clé primaire
+      fiable, utilisable pour dédoublonner. Ne jamais caster en numérique (perte des
+      zéros de tête et débordement).'
+    role: identifiant technique
+    tranche_sans_question: true
+    type: texte (hexadécimal 32 caractères)
+  AccidentWeekDay:
+    modalites: 7
+    note: 'aw401 = lundi (14,19 %), aw402 mardi (15,01 %), aw403 mercredi (15,36 %),
+      aw404 jeudi (15,32 %), aw405 vendredi (16,21 %), aw406 samedi (13,59 %), aw407
+      dimanche (10,31 %). Semaine commençant le lundi. Jour de la semaine LOCAL, cohérent
+      avec l''heure locale (voir referentiel_temporel) : un croisement en UTC peut
+      déplacer les accidents nocturnes d''un jour à l''autre.'
+    role: code catégoriel
+    tranche_sans_question: true
+  AccidentWeekDay_de:
+    note: Redondante.
+    role: libellé allemand
+  AccidentWeekDay_en:
+    note: Redondante.
+    role: libellé anglais
+  AccidentWeekDay_fr:
+    note: Redondante. Permet de décoder aw401..aw407.
+    role: libellé français
+  AccidentWeekDay_it:
+    note: Redondante.
+    role: libellé italien
+  AccidentYear:
+    note: '15 millésimes, répartition homogène (6,31 % en 2020 à 7,09 % en 2011) :
+      aucune année tronquée, série exploitable en tendance. Le creux 2020 est cohérent
+      avec une baisse de mobilité, pas avec un défaut de données. Vérifier néanmoins
+      que 2025 est complète avant tout calcul de tendance sur le dernier millésime.'
+    plage: 2011 – 2025
+    role: année de survenue
+    tranche_sans_question: true
+  CantonCode:
+    modalites: 26
+    note: 'Sigles à 2 lettres des 26 cantons. ZH 18,45 %, BE 14,15 %, VD 9,41 %, AG
+      6,46 %, GE 6,36 % en tête — concentration qui suit la population et le trafic,
+      pas un défaut de collecte. Un comptage brut par canton n''est PAS un indicateur
+      de dangerosité : il faut rapporter à une exposition (population, véhicules-km).
+      Seul niveau territorial STABLE sur 2011-2025 : à privilégier pour les séries
+      longues.'
+    role: code catégoriel
+    tranche_sans_question: true
+  MunicipalityCode:
+    modalites: 2091
+    note: 'Stocké en TEXTE avec zéro de tête (ex. « 0261 » = Zurich, 6,98 % ; « 6621
+      » 2,91 % ; « 5586 » 1,99 %). PIÈGE 1 : un cast en entier détruit le zéro de
+      tête et casse toute jointure communale. PIÈGE 2 (confirmé question 3, option
+      b) : millésimes MÉLANGÉS, codes en vigueur à la date de l''accident — voir referentiel_territorial
+      pour les conséquences et la procédure de rétro-harmonisation.'
+    point_a_verifier: '2 091 codes distincts est INFÉRIEUR aux ~2 130 communes actuelles,
+      alors qu''un empilement de 15 millésimes devrait en produire nettement plus
+      (~2 600+). Explication possible : de nombreuses petites communes sans aucun
+      accident corporel, ou une mise à jour seulement partielle des codes par le producteur.
+      Procédure de vérification : compter les codes distincts année par année et repérer
+      les codes qui disparaissent ou apparaissent. Repli en attendant : ne pas supposer
+      que le fichier couvre toutes les communes, et ne pas interpréter l''absence
+      d''une commune comme une absence d''accident sans contrôle.'
+    role: code territorial (numéro OFS de commune) au millésime de l'accident
+    validation: question 3, option b
+  RoadType:
+    modalites: 6
+    note: 'rt432 route principale (49,54 %), rt433 route secondaire (36,99 %), rt430
+      autoroute (8,94 %), rt439 autre (3,61 %), rt431 semi-autoroute (0,82 %), rt434
+      installation annexe (0,10 %). Codes non ordinaux : rt439 « autre » est un fourre-tout,
+      pas un degré. Décrit le type de route, non le gestionnaire.'
+    role: code catégoriel
+    tranche_sans_question: true
+  RoadType_de:
+    note: Redondante.
+    role: libellé allemand
+  RoadType_en:
+    note: Redondante.
+    role: libellé anglais
+  RoadType_fr:
+    note: Redondante.
+    role: libellé français
+  RoadType_it:
+    note: Redondante.
+    role: libellé italien
+dataset: RoadTrafficAccidentLocations
+grain: Une ligne = un accident corporel enregistré par la police, identifié par AccidentUID
+  (unicité 100 % sur 267 761 lignes). 36 colonnes, aucune valeur nulle sur aucune
+  colonne.
+non_tranche:
+- 'Anomalie de comptage des codes communaux (2 091 codes distincts < ~2 130 communes
+  actuelles) : procédure de vérification et repli inscrits dans la colonne MunicipalityCode.'
+- 'Complétude du millésime 2025 : à vérifier avant tout calcul de tendance sur la
+  dernière année.'
+perimetre:
+  consequences:
+  - 'La part d''accidents corporels vaut 100 % par construction : tout taux de gravité,
+    tout « % d''accidents graves », toute « gravité moyenne » est CONDITIONNEL aux
+    accidents corporels et ne doit jamais être présenté comme un taux tous-accidents.'
+  - 'Toute comparaison avec une source « tous accidents » (statistique nationale,
+    données d''assurance, comptages de trafic) utilise un dénominateur deux à trois
+    fois plus grand : le rapport est faux si le périmètre n''est pas aligné au préalable.'
+  - 'Le périmètre est homogène sur les 15 millésimes : les évolutions annuelles s''interprètent
+    sans correction de champ.'
+  couverture: Accidents CORPORELS uniquement (blessés légers, blessés graves, tués).
+    Les accidents à dégâts matériels seuls sont hors périmètre À LA SOURCE, ce n'est
+    pas un filtre d'export.
+  validation: confirmé par l'humain (question 2, option a)
+pieges:
+- 'Périmètre corporel uniquement : tout taux de gravité est conditionnel, jamais un
+  taux tous-accidents. Comparaison hors périmètre = dénominateur 2 à 3 fois trop petit.'
+- 'Coordonnées en EPSG:2056 (mètres) : usage direct dans un contexte WGS84 ne lève
+  aucune erreur mais projette les 267 761 points hors carte ; retrancher l''offset
+  2 000 000/1 000 000 bascule silencieusement en LV03 — irréversible si le fichier
+  est réécrit.'
+- 'MunicipalityCode à millésimes mélangés : séries communales structurellement discontinues
+  et jointures silencieusement orphelines — rétro-harmoniser via les mutations OFS,
+  ou agréger au canton.'
+- 'MunicipalityCode et AccidentHour sont du TEXTE à zéro de tête : un cast en entier
+  détruit « 0261 » et « 07 » et casse les jointures et les tris.'
+- 'AccidentSeverityCategory est ordinale à l''envers (as1 = le plus grave) et qualifie
+  l''accident, non un nombre de victimes : aucun comptage de tués ou blessés n''existe,
+  on ne peut jamais sommer des victimes.'
+- 'at0 vs at00 : deux modalités distinctes que toute normalisation de code peut fusionner
+  (~2 460 lignes).'
+- 'Heure locale CET/CEST : croiser avec une source UTC sans conversion saisonnière
+  déplace une partie du pic de 17 h vers 15-16 h et fait basculer les accidents nocturnes
+  d''un jour de semaine à l''autre.'
+- 'Aucune date calendaire ni minute : on ne peut pas reconstituer une chronologie
+  fine ni un délai entre deux accidents.'
+- 'Les colonnes _de/_fr/_it/_en sont de pures redondances des codes : les inclure
+  dans une analyse multivariée ou un one-hot encoding quadruple artificiellement le
+  poids de chaque variable catégorielle.'
+- 'Aucun comptage brut (par canton, commune, type de route ou heure) n''est un indicateur
+  de risque : il manque toujours un dénominateur d''exposition, absent de ce fichier.'
+referentiel_spatial:
+  crs: EPSG:2056 (CH1903+ / LV95)
+  geometrie: point
+  regles:
+  - 'Reprojeter explicitement vers EPSG:4326 avant tout usage avec une couche ou une
+    librairie WGS84 : sans reprojection, aucune erreur n''est levée mais les points
+    sortent de toute carte plausible.'
+  - 'Ne JAMAIS retrancher l''offset 2 000 000 / 1 000 000 : cet offset fait partie
+    du système LV95, le soustraire bascule silencieusement les points en LV03 (EPSG:21781)
+    et décale tout le jeu.'
+  - Distances, tampons et agrégations par grille calculables directement en mètres.
+  - 'Contrôle de cohérence immédiat : en LV95 l''est est toujours > 2 000 000 et le
+    nord toujours < 1 300 000 — une inversion E/N se détecte donc sans référentiel
+    externe.'
+  unite: mètre
+  validation: confirmé par l'humain (question 1, option a)
+referentiel_temporel:
+  consequences:
+  - Les profils journaliers, définitions de « nuit » et comparaisons pointe/creux
+    se lisent directement, sans correction.
+  - 'Tout croisement avec une source en UTC (météo, comptages de trafic, API) exige
+    une conversion explicite tenant compte de la saison : +1 h en hiver, +2 h en été.
+    Le décalage n''étant pas constant, il ne peut PAS être corrigé après coup par
+    une soustraction unique.'
+  - Sans conversion, une partie du pic de 17 h est attribuée à 15 h ou 16 h selon
+    le mois, et les accidents de fin de nuit basculent d'un jour de semaine à l'autre
+    — toute analyse « nuit du samedi au dimanche » est faussée.
+  - 'Le changement d''heure produit deux heures locales atypiques par an (heure inexistante
+    en mars, heure doublée en octobre) : effet négligeable sur 267 761 lignes, mais
+    à ne pas confondre avec une anomalie de collecte.'
+  - 'Granularité temporelle maximale reconstituable : (année, mois, jour de semaine,
+    heure). Jamais une date calendaire exacte, jamais une minute.'
+  convention_tranche: 'AccidentHour = début d''une tranche d''une heure, fermée à
+    gauche : [h, h+1['
+  fuseau: Heure légale locale suisse (CET/CEST, changement d'heure appliqué)
+  validation: confirmé par l'humain (question 4, option a)
+referentiel_territorial:
+  consequences:
+  - 'Une série temporelle par MunicipalityCode est structurellement discontinue :
+    une commune fusionnée passe à zéro accident sans valeur manquante (fausse chute
+    de -100 %), une commune créée apparaît ex nihilo (fausse hausse infinie).'
+  - Un inner join avec un référentiel millésimé récent laisse SILENCIEUSEMENT orphelines
+    les lignes des années anciennes ; un left join les remplit de libellés nuls qu'on
+    prendra à tort pour des codes invalides.
+  - 'Procédure correcte : rétro-harmoniser via la table des mutations de communes
+    de l''OFS vers un millésime unique avant toute série longue ou toute carte multi-années.'
+  - 'Repli praticable sans cette table : agréger au niveau CantonCode, stable sur
+    toute la période.'
+  regle: 'Les codes communaux sont ceux EN VIGUEUR À LA DATE DE L''ACCIDENT : les
+    millésimes OFS sont MÉLANGÉS sur 2011-2025.'
+  validation: confirmé par l'humain (question 3, option b)
+titre: Accidents de la route CORPORELS géolocalisés en Suisse (2011-2025) — une ligne
+  par accident
