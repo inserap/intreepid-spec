@@ -460,11 +460,36 @@ transversaux, points non tranchés) et un vocabulaire de colonne **fixe**. C'est
 maîtrise : une notion de complet, une notion de trop long, un contrat sur lequel `describe` peut
 s'appuyer.
 
-| | aujourd'hui | dense + schéma |
+**ARBITRÉ PAR ALEX (07/08) : fiche dense + regroupement des colonnes redondantes.**
+
+**Le gisement le plus gros n'est pas la densification, c'est la redondance.** Mesuré : **20 des 37
+entrées sont des libellés traduits** — `AccidentMonth`, `AccidentType`, `AccidentSeverityCategory`,
+`AccidentWeekDay`, `RoadType`, chacun × `de`/`fr`/`it`/`en`. L'agent documente **chacune séparément**,
+287 caractères en moyenne : **5 746 caractères, 22 % de la fiche**, pour redire vingt fois la même
+chose. Une seule entrée transversale suffit (~300 car.) — et elle n'existe que si la fiche a une place
+pour le transversal, précisément ce que la brique #10 a supprimé.
+
+Densification mesurée sur trois colonnes réelles, sans perdre un seul fait :
+
+| colonne | aujourd'hui | dense | |
+|---|---|---|---|
+| `AccidentMonth_de` (libellé) | 263 car. | *absorbée dans le bloc transversal* | |
+| `AccidentLocation_CHLV95_E` (moyenne) | 1 106 car. | ~420 car. | −62 % |
+| `AccidentSeverityCategory` (la plus riche) | 2 673 car. | ~900 car. | −66 % |
+
+Ce qui part : « PIÈGE DE RÉFÉRENTIEL », « sémantiquement opposées », « silencieusement », « il faut
+une reprojection explicite ». De l'emphase et des connecteurs.
+
+| | aujourd'hui | dense + regroupement |
 |---|---|---|
-| contenu de la fiche | 26 278 car. | ~9 000 car. |
+| contenu de la fiche | 26 278 car. | **~8 100 car.** |
+| temps de génération de la fiche | 257 s | **~80 s** |
+| gain sur la séance | | **−177 s, 38 %** |
 | bloc transversal | perdu | restauré |
 | vocabulaire | réinventé à chaque run | fixé |
+
+**Ce levier rapporte plus que la structure en deux appels sur la génération**, et les deux se
+cumulent : l'un attaque le nombre d'appels, l'autre ce qui est écrit à chaque appel.
 
 ### 8.6 Le troisième levier, gratuit à essayer
 
@@ -480,11 +505,23 @@ au gate.**
 3. Fiche **dense** + schéma minimal restaurant le bloc transversal (§ 8.5)
 4. `thinking=False` éprouvé au passage (§ 8.6)
 
-Après cela il ne reste qu'une **décision produit** — combien de documentation par colonne — et aucun
-mécanisme. Ce n'est pas un château de cartes : les quatre leviers **enlèvent** quelque chose.
+La **décision produit** qui restait — combien de documentation par colonne — a été **tranchée par
+Alex le 07/08** : dense + regroupement des redondantes (§ 8.5). Il ne reste donc **aucun arbitrage
+ouvert** et aucun mécanisme spéculatif. Ce n'est pas un château de cartes : les quatre leviers
+**enlèvent** quelque chose.
 
-Cumul attendu : **462 s → ~250 s de génération**, **961 s → ~400 s bout en bout**, et à l'échelle de
-300 couches **80 h → ~33 h**.
+Cumul attendu, les leviers étant indépendants :
+
+| | génération | bout en bout |
+|---|---|---|
+| aujourd'hui | 462 s | 961 s |
+| − fiche dense (§ 8.5) | −177 s | |
+| − structure en 2 appels (§ 8.3) | −~35 s de ré-émission, et surtout **−4 attentes** | |
+| − `thinking=False` si la qualité tient (§ 8.6) | −98 s | |
+| **cible** | **~150-250 s** | **~300-400 s** |
+
+À l'échelle de 300 couches : **80 h → ~25-33 h**. Le mur résiduel est **l'attention humaine**
+(4 questions par jeu), et elle ne se règle pas dans le curateur.
 
 ### 8.8 Ce qu'il ne faut PAS refaire
 
