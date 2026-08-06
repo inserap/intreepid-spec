@@ -1,0 +1,486 @@
+columns:
+  AccidentHour:
+    description: Heure de survenue de l'accident, exprimée comme le début de la tranche
+      horaire.
+    distribution: pic marqué à 17h (10,67 %) et 16h (8,76 %), second pic matinal à
+      07h (5,94 %) — profil typique des heures de pointe
+    pieges:
+    - 'PIÈGE DE ZÉRO DE TÊTE : les heures matinales sont stockées ''06'', ''07'',
+      ''08'', ''09''. Un cast en entier fait perdre le zéro et casse toute jointure
+      ou tout filtre écrit sur la forme à deux chiffres ; inversement un tri alphabétique
+      sur le texte est correct ici (000 tri lexicographique = tri horaire) parce que
+      le padding est systématique — mais il cesse de l''être dès qu''on a casté puis
+      reformaté sans padding.'
+    - 'Cardinalité exactement 24 : il n''existe AUCUNE modalité pour une heure inconnue.
+      Or l''heure d''un accident n''est pas toujours établie par le constat. Soit
+      la source ne conserve que les accidents à heure connue, soit les heures inconnues
+      ont été imputées sans marqueur. À vérifier auprès du producteur avant toute
+      analyse horaire fine ; en attendant, considérer que le profil horaire pourrait
+      être légèrement biaisé par des imputations invisibles.'
+    - 'Il s''agit d''une tranche d''une heure, pas d''un instant : ''17'' couvre 17h00–17h59.
+      Ne pas traiter comme une valeur ponctuelle dans un calcul de durée.'
+    type_retenu: categorical (code TEXTUEL à zéro de tête, 24 modalités '00' à '23')
+  AccidentHour_text:
+    description: Libellé de la tranche horaire, dérivé de `AccidentHour` (forme '17h-18h').
+    pieges:
+    - Colonne d'affichage, redondante avec `AccidentHour` (mêmes 24 modalités, mêmes
+      fréquences) ; grouper sur `AccidentHour`.
+    - 'Le libellé explicite la nature d''intervalle d''une heure de la donnée : ''17h-18h''
+      confirme que le code ''17'' désigne la tranche et non l''instant.'
+    type_retenu: categorical (libellé)
+  AccidentInvolvingBicycle:
+    description: 'Indicateur booléen : un cycle est IMPLIQUÉ dans l''accident, au
+      sens large ratifié — tout cycliste présent, blessé ou non, responsable ou non.
+      Les VÉLOS ÉLECTRIQUES sont inclus sous ce drapeau. Vrai pour 24,70 % des lignes
+      (~66 140), c''est le plus fréquent des trois indicateurs d''usagers.'
+    pieges:
+    - 'PIÈGE DE SÉRIE TEMPORELLE (majeur) : la catégorie est stable de définition
+      mais sa COMPOSITION s''est déplacée sur 2011–2025 avec l''essor du vélo électrique,
+      qui y est agrégé sans marqueur distinctif. Une courbe ''accidents de vélo''
+      sur quinze ans mélange donc évolution de l''exposition et changement de composition
+      du parc ; elle reste utilisable, mais toute publication doit mentionner que
+      les e-bikes y sont inclus, faute de quoi la hausse sera attribuée à tort à un
+      facteur d''aménagement ou de comportement.'
+    - 'Le jeu ne permet PAS d''isoler les vélos électriques des vélos musculaires
+      : cette question est hors de portée de ce fichier, aucune reconstitution n''est
+      possible.'
+    - 'IMPLICATION ≠ VICTIMISATION : un accident peut porter ce drapeau alors que
+      la personne blessée est un automobiliste ou un piéton.'
+    - 'Absence de modalité ''inconnu'' : `false` ne se distingue pas d''une non-collecte.'
+    type_retenu: boolean (2 modalités true/false, aucun null, aucune modalité 'inconnu')
+  AccidentInvolvingMotorcycle:
+    description: 'Indicateur booléen : un deux-roues motorisé est IMPLIQUÉ dans l''accident,
+      au sens large ratifié. Les CYCLOMOTEURS et scooters relèvent de ce drapeau.
+      Vrai pour 20,91 % des lignes (~55 990).'
+    pieges:
+    - 'CATÉGORIE HÉTÉROGÈNE : motos de forte cylindrée et cyclomoteurs sont agrégés
+      sous un même drapeau alors qu''ils correspondent à des populations d''usagers,
+      des vitesses et des profils de risque très différents. Aucune séparation n''est
+      possible depuis ce fichier ; ne pas présenter ce drapeau comme ''accidents de
+      moto''.'
+    - 'IMPLICATION ≠ VICTIMISATION : le drapeau ne dit ni le nombre de motocyclistes
+      ni leur état.'
+    - 'Forte saisonnalité d''usage : croiser avec `AccidentMonth` sans dénominateur
+      d''exposition confond risque et usage, le parc deux-roues circulant surtout
+      d''avril à septembre.'
+    - 'Absence de modalité ''inconnu'' : `false` ne se distingue pas d''une non-collecte.'
+    type_retenu: boolean (2 modalités true/false, aucun null, aucune modalité 'inconnu')
+  AccidentInvolvingPedestrian:
+    description: 'Indicateur booléen : un piéton est IMPLIQUÉ dans l''accident, au
+      sens large ratifié par le producteur — tout piéton présent dans l''accident,
+      quel que soit son rôle et qu''il ait été blessé ou non. Vrai pour 11,53 % des
+      lignes (~30 870).'
+    pieges:
+    - 'IMPLICATION ≠ VICTIMISATION : le drapeau ne dit pas que le piéton a été blessé.
+      Croiser avec `AccidentSeverityCategory` = `as1` donne des accidents mortels
+      impliquant un piéton, PAS des piétons tués — le décès peut concerner un autre
+      usager. Publier ce croisement comme un décompte de piétons tués est un contresens
+      que rien ne signale.'
+    - 'Ne coïncide PAS avec le type d''accident `at8` ''accident impliquant des piétons''
+      (11,26 %) : environ 720 lignes d''écart. `AccidentType` classe le déroulement
+      de l''accident, ce drapeau signale une présence. Ne jamais utiliser l''une pour
+      valider ou remplacer l''autre.'
+    - 'Grain accident : ne dit pas combien de piétons étaient impliqués.'
+    - 'Absence de null et de modalité ''non renseigné'' : un `false` peut masquer
+      une information non collectée aussi bien qu''une absence réelle de piéton.'
+    type_retenu: boolean (2 modalités true/false, aucun null, aucune modalité 'inconnu')
+  AccidentLocation_CHLV95_E:
+    description: Coordonnée EST (easting) du lieu de l'accident dans le système de
+      référence suisse CH1903+/LV95.
+    pieges:
+    - 'PIÈGE DE RÉFÉRENTIEL : ce n''est PAS une longitude. Passer ces valeurs à un
+      outil attendant du WGS84 (lat/lon) place tous les points hors de la Terre ou
+      les fait rejeter en masse ; il faut une reprojection explicite EPSG:2056 → EPSG:4326.'
+    - 'Ne pas confondre avec l''ancien LV03 (EPSG:21781), dont les eastings tournent
+      autour de 600 000 : la différence est exactement l''offset de 2 000 000 m. Soustraire
+      2 000 000 par erreur ne déclenche aucune alerte mais décale tout le jeu.'
+    - 'Unité métrique : les distances euclidiennes sont directement des mètres, aucun
+      facteur cos(latitude) à appliquer.'
+    - 'Aucun null, aucun zéro, aucune valeur aberrante à 3 sigma : pas de sentinelle
+      de manquant détectable — toutes les lignes sont géolocalisées.'
+    plage_observee: 2 486 335 à 2 832 028 (médiane 2 650 691) — cohérent avec l'emprise
+      du territoire suisse
+    referentiel: EPSG:2056 (CH1903+ / LV95), unité = mètre, faux-est de 2 000 000
+      m
+    type_retenu: numeric (mètres projetés)
+  AccidentLocation_CHLV95_N:
+    description: Coordonnée NORD (northing) du lieu de l'accident dans le système
+      de référence suisse CH1903+/LV95.
+    pieges:
+    - Doit impérativement être appariée à `AccidentLocation_CHLV95_E` (E = axe X,
+      N = axe Y). Inverser E et N est indétectable numériquement pour un outil mais
+      projette le jeu entier hors de Suisse.
+    - 'En LV95, l''easting (≈2,5 M) est TOUJOURS supérieur au northing (≈1,2 M) :
+      c''est le contrôle de cohérence à appliquer après toute manipulation.'
+    - 'Distribution asymétrique (skewness -0,68) : la densité se concentre sur le
+      Plateau, pas un artefact de qualité.'
+    plage_observee: 1 075 625 à 1 294 423 (médiane 1 220 866) — cohérent avec l'emprise
+      suisse
+    referentiel: EPSG:2056 (CH1903+ / LV95), unité = mètre, faux-nord de 1 000 000
+      m
+    type_retenu: numeric (mètres projetés)
+  AccidentMonth:
+    description: Mois de survenue de l'accident, entier 1 à 12.
+    pieges:
+    - 'Forte saisonnalité réelle : juin 10,82 % contre février 5,65 %, soit un rapport
+      de près de 2. Comparer un mois d''été à un mois d''hiver sans désaisonnalisation
+      attribue à un facteur explicatif ce qui n''est que le cycle annuel (exposition
+      deux-roues, jours longs).'
+    - 'Les mois n''ont pas la même longueur : février compte 28–29 jours. Un taux
+      journalier doit diviser par le nombre de jours réel, sinon février est artificiellement
+      pénalisé de ~10 %.'
+    - 'Ne jamais moyenner : un ''mois moyen'' est dénué de sens ; ne pas non plus
+      l''utiliser comme numérique linéaire — décembre (12) et janvier (1) sont adjacents
+      dans le temps mais aux extrêmes de l''échelle.'
+    type_retenu: categorical (code ordonné, 12 modalités)
+  AccidentMonth_de:
+    description: Nom du mois en allemand, dérivé de `AccidentMonth`.
+    pieges:
+    - 'Colonne d''affichage : un tri alphabétique met April en premier et September
+      avant Oktober. Toujours trier et grouper sur `AccidentMonth`.'
+    type_retenu: categorical (libellé)
+  AccidentMonth_en:
+    description: Nom du mois en anglais, dérivé de `AccidentMonth`.
+    pieges:
+    - Colonne d'affichage ; tri alphabétique non chronologique (April, August, December…).
+      Trier sur `AccidentMonth`.
+    type_retenu: categorical (libellé)
+  AccidentMonth_fr:
+    description: Nom du mois en français, dérivé de `AccidentMonth`.
+    pieges:
+    - 'Colonne d''affichage, minuscules et accents (''août'', ''décembre'', ''février'')
+      : le tri alphabétique est faux chronologiquement. Trier sur `AccidentMonth`.'
+    type_retenu: categorical (libellé)
+  AccidentMonth_it:
+    description: Nom du mois en italien, dérivé de `AccidentMonth`.
+    pieges:
+    - Colonne d'affichage ; tri alphabétique non chronologique. Trier sur `AccidentMonth`.
+    type_retenu: categorical (libellé)
+  AccidentSeverityCategory:
+    description: 'Catégorie de gravité de l''accident selon la nomenclature officielle
+      suisse, code court. Le jeu est RESTREINT AUX ACCIDENTS CORPORELS (ratifié) :
+      aucune modalité ''dégâts matériels seuls'', toute ligne implique au moins une
+      personne blessée. Gravité HIÉRARCHIQUE (ratifié) : la modalité reflète la victime
+      la plus gravement atteinte de l''accident ; une ligne = un accident, jamais
+      une personne.'
+    modalites:
+      as1: Accident avec tué(s) — 1,30 % (~3 480 lignes)
+      as2: Accident avec blessé(s) grave(s), sans tué — 20,78 % (~55 640 lignes)
+      as3: Accident avec blessé(s) léger(s) uniquement — 77,92 % (~208 640 lignes)
+    pieges:
+    - 'PIÈGE DE GRAIN (le plus coûteux de la fiche avec celui de périmètre) : ce fichier
+      est au grain de l''ACCIDENT. Les ~3 480 lignes `as1` donnent le nombre d''accidents
+      mortels, PAS le nombre de tués — un accident peut compter plusieurs décès, donc
+      le bilan humain réel est supérieur et n''est pas reconstituable ici. Aucune
+      colonne de dénombrement de victimes n''existe dans le jeu.'
+    - 'PIÈGE DE TRONCATURE HIÉRARCHIQUE : les blessés légers et graves présents dans
+      un accident classé `as1`, et les blessés légers d''un accident `as2`, ne sont
+      comptés nulle part. Sommer les modalités pour reconstituer un bilan de victimes
+      produit un total qui tombe dans le bon ordre de grandeur et ressemble à une
+      statistique officielle, tout en étant structurellement incomparable avec elle.'
+    - 'PIÈGE DE PÉRIMÈTRE : `as3` n''est PAS un ''accident sans gravité''. Le filtrer
+      pour ''ne garder que les accidents sérieux'' écarte 78 % des lignes, qui comportent
+      toutes un blessé.'
+    - 'PIÈGE DE DÉNOMINATEUR : les taux calculés ici ne sont pas comparables à une
+      statistique incluant les accidents à dégâts matériels seuls — ceux-ci sont environ
+      deux à trois fois plus nombreux en Suisse, si bien qu''un rapprochement naïf
+      sous-estime le volume d''accidents d''un facteur ~3 sans qu''aucun contrôle
+      automatique ne le signale.'
+    - 'L''ordre métier est celui de la gravité (as1 le plus grave), pas celui des
+      fréquences ni l''ordre alphabétique : un graphique trié par volume place le
+      plus grave en dernier.'
+    - Codes à traiter en texte ; un cast en 1/2/3 crée une échelle DÉCROISSANTE en
+      gravité, à documenter explicitement.
+    type_retenu: categorical (code textuel ordonné par gravité décroissante as1 >
+      as2 > as3)
+    usages_invalides:
+    - Compter des tués, des blessés graves ou des blessés légers.
+    - Calculer une létalité par victime ou un ratio blessés/tués.
+    usages_valides:
+    - Compter des ACCIDENTS par gravité, par canton, par année, par type de route.
+    - Comparer la structure de gravité entre territoires ou périodes (part d'accidents
+      mortels).
+  AccidentSeverityCategory_de:
+    description: 'Libellé allemand de `AccidentSeverityCategory` (''Unfall mit Leichtverletzten''
+      / ''Schwerverletzten'' / ''Getöteten''). Redondant avec le code : même cardinalité
+      3, mêmes fréquences.'
+    pieges:
+    - 'Colonne d''affichage : grouper et ordonner sur `AccidentSeverityCategory`,
+      dont le code porte l''ordre de gravité.'
+    - 'Le libellé dit bien ''Unfall mit…'' (accident avec…) : il qualifie l''accident,
+      pas la personne.'
+    type_retenu: categorical (libellé)
+  AccidentSeverityCategory_en:
+    description: Libellé anglais de `AccidentSeverityCategory` ('Accident with light
+      injuries' / 'severe injuries' / 'fatalities'). Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code.
+    - '''light injuries'' se traduit facilement en ''minor / non-serious'' dans un
+      rapport : formulation à éviter, elle réintroduit le contresens selon lequel
+      ces accidents seraient sans victime.'
+    type_retenu: categorical (libellé)
+  AccidentSeverityCategory_fr:
+    description: Libellé français de `AccidentSeverityCategory` ('accident avec blessés
+      légers' / 'blessés graves' / 'tués'). Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code, qui seul porte l'ordre de gravité
+      (un tri alphabétique donne graves < légers < tués).
+    - 'Accents et pluriels dans le libellé : toute jointure texte sur cette colonne
+      exige une normalisation Unicode.'
+    type_retenu: categorical (libellé)
+  AccidentSeverityCategory_it:
+    description: Libellé italien de `AccidentSeverityCategory` ('Incidente con feriti
+      leggeri' / 'feriti gravi' / 'persone decedute'). Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code.
+    - 'Formulation non parallèle aux autres langues pour la classe mortelle (''persone
+      decedute'' et non ''morti'') : ne pas s''appuyer sur un motif textuel commun
+      aux quatre langues pour détecter la classe la plus grave.'
+    type_retenu: categorical (libellé)
+  AccidentType:
+    description: Type d'accident selon la typologie officielle suisse, code court.
+    modalites:
+      at0: Dérapage ou perte de maîtrise (33,05 %)
+      at00: Autres (0,92 %)
+      at1: Dépassement ou changement de voie (4,75 %)
+      at2: Tamponnement / collision par l'arrière (19,43 %)
+      at3: Accident en quittant une route, en tournant (7,99 %)
+      at4: Accident en s'engageant sur une route (12,00 %)
+      at5: Accident en traversant une route (4,95 %)
+      at6: Collision frontale (3,93 %)
+      at7: Accident en parquant (1,27 %)
+      at8: Accident impliquant des piétons (11,26 %)
+      at9: Accident impliquant des animaux (0,45 %)
+    pieges:
+    - 'PIÈGE MAJEUR de code voisin : `at0` (33 % des lignes) et `at00` (0,92 %) sont
+      DEUX modalités distinctes et sémantiquement opposées — ''perte de maîtrise''
+      contre ''autres''. Toute normalisation qui strippe les zéros, caste en entier
+      (`at0`→0 et `at00`→0) ou tronque à 3 caractères fusionne silencieusement ~2
+      460 lignes ''Autres'' dans la catégorie la plus fréquente. Traiter exclusivement
+      en texte, comparaison exacte.'
+    - '`at00` est une catégorie résiduelle : à ne pas interpréter comme une classe
+      métier homogène.'
+    type_retenu: categorical (code textuel)
+  AccidentType_de:
+    description: Libellé allemand de `AccidentType`. Redondant avec le code (même
+      cardinalité 11, mêmes fréquences).
+    pieges:
+    - 'Colonne d''affichage : ne jamais l''utiliser comme clé de groupement stable
+      (un changement de libellé casserait les séries) ; grouper sur `AccidentType`.'
+    type_retenu: categorical (libellé)
+  AccidentType_en:
+    description: Libellé anglais de `AccidentType`. Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code.
+    type_retenu: categorical (libellé)
+  AccidentType_fr:
+    description: Libellé français de `AccidentType`. Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code. Contient des apostrophes typographiques
+      et des accents — attention aux comparaisons de chaînes non normalisées.
+    type_retenu: categorical (libellé)
+  AccidentType_it:
+    description: Libellé italien de `AccidentType`. Redondant avec le code.
+    pieges:
+    - 'Colonne d''affichage ; grouper sur le code. Mélange d''apostrophes droites
+      ('') et typographiques (’) selon la modalité : une jointure texte sur ce libellé
+      échoue silencieusement.'
+    type_retenu: categorical (libellé)
+  AccidentUID:
+    description: Identifiant technique unique de l'accident, chaîne hexadécimale de
+      32 caractères majuscules (style GUID/ROWID).
+    notes: 'Unicité parfaite : 267 761 valeurs distinctes pour 267 761 lignes, aucun
+      doublon. Un accident = une ligne ; les victimes multiples ne sont donc PAS dénombrables
+      ici.'
+    pieges:
+    - 'Ne jamais caster en numérique ni tronquer : chaîne hexadécimale, la casse et
+      la longueur complète sont significatives pour toute jointure vers une source
+      de détail (véhicules, personnes impliquées).'
+    role: clé primaire
+    type_retenu: categorical (identifiant, à traiter en texte)
+  AccidentWeekDay:
+    description: Jour de la semaine de l'accident, code court.
+    modalites:
+      aw401: Lundi (14,19 %)
+      aw402: Mardi (15,01 %)
+      aw403: Mercredi (15,36 %)
+      aw404: Jeudi (15,32 %)
+      aw405: Vendredi (16,21 %)
+      aw406: Samedi (13,59 %)
+      aw407: Dimanche (10,31 %)
+    pieges:
+    - L'ordre chronologique est celui du code (aw401 = lundi → aw407 = dimanche),
+      PAS l'ordre des fréquences. Un graphique trié par fréquence suggère à tort un
+      pic 'vendredi/mercredi' au milieu de la semaine.
+    - 'Le dimanche est le jour le plus bas en volume (10,31 %) mais cela reflète une
+      exposition moindre, pas une route plus sûre : sans dénominateur de trafic, aucune
+      conclusion de risque n''est possible.'
+    - 'Le nombre d''occurrences de chaque jour de semaine sur 2011–2025 n''est pas
+      exactement égal (jusqu''à ~2 jours d''écart par an) : effet négligeable ici
+      mais à corriger pour des taux journaliers fins.'
+    type_retenu: categorical (code textuel ordonné)
+  AccidentWeekDay_de:
+    description: Nom du jour de la semaine en allemand, dérivé de `AccidentWeekDay`.
+    pieges:
+    - Colonne d'affichage ; ordonner sur `AccidentWeekDay`.
+    type_retenu: categorical (libellé)
+  AccidentWeekDay_en:
+    description: Nom du jour de la semaine en anglais, dérivé de `AccidentWeekDay`.
+    pieges:
+    - Colonne d'affichage ; ordonner sur `AccidentWeekDay`.
+    type_retenu: categorical (libellé)
+  AccidentWeekDay_fr:
+    description: Nom du jour de la semaine en français, dérivé de `AccidentWeekDay`.
+    pieges:
+    - Colonne d'affichage ; ordonner sur `AccidentWeekDay`.
+    type_retenu: categorical (libellé)
+  AccidentWeekDay_it:
+    description: Nom du jour de la semaine en italien, dérivé de `AccidentWeekDay`.
+    pieges:
+    - Colonne d'affichage ; ordonner sur `AccidentWeekDay`.
+    - 'Incohérence d''accentuation dans la source : ''Lunedí'' porte un accent aigu
+      là où l''italien standard écrit ''Lunedì'' (les autres jours sont bien en accent
+      grave : Martedì, Mercoledì…). Une jointure ou un filtre sur la chaîne attendue
+      échoue silencieusement sur les 14,19 % de lignes du lundi.'
+    type_retenu: categorical (libellé)
+  AccidentYear:
+    description: Année de survenue de l'accident.
+    pieges:
+    - 'Aucune année tronquée : 2025 pèse 6,73 % contre 6,67 % attendu si les années
+      étaient égales, et l''écart entre le millésime le plus fourni (2011, 7,09 %)
+      et le plus faible (2020, 6,31 %) est réel, pas un artefact de collecte partielle.
+      Le creux de 2020 est très probablement l''effet de la baisse de mobilité liée
+      à la pandémie.'
+    - Ne jamais moyenner cette colonne (une 'année moyenne de 2018' n'a aucun sens)
+      ni la traiter comme une mesure continue dans un modèle.
+    plage: 2011 à 2025 (15 millésimes complets)
+    type_retenu: à traiter comme code catégoriel ordonné / entier d'année, PAS comme
+      une mesure
+  CantonCode:
+    cardinalite: 26 — les 26 cantons sont tous représentés, la couverture est nationale
+    description: Canton suisse où l'accident s'est produit, abréviation officielle
+      à deux lettres.
+    distribution: ZH 18,45 %, BE 14,15 %, VD 9,41 %, AG 6,46 %, GE 6,36 %, LU 5,55
+      %, SG 5,54 %, TI 4,42 %…
+    pieges:
+    - 'Les effectifs bruts suivent d''abord la population et le trafic : tout classement
+      de cantons ''les plus accidentogènes'' sans normalisation par population, parc
+      de véhicules ou véhicules-kilomètres est trompeur.'
+    - 'Deux lettres majuscules : à traiter en texte ; une jointure vers un référentiel
+      utilisant les numéros BFS de canton (1–26) demande une table de passage explicite.'
+    type_retenu: categorical (code textuel)
+  MunicipalityCode:
+    cardinalite: 2 091 codes distincts pour 267 761 lignes, cumulés sur les millésimes
+      2011 à 2025 — ce n'est donc PAS le nombre de communes existant à une date donnée
+    description: 'Commune suisse où l''accident s''est produit, identifiée par son
+      numéro OFS/BFS sur quatre positions, stocké en TEXTE avec zéro de tête (ex.
+      ''0261'' = ville de Zurich, 6,98 % des lignes ; ''0351'' = Berne, 1,95 %). Deuxième
+      niveau administratif du jeu, sous `CantonCode`. RÉFÉRENTIEL HISTORIQUE (ratifié
+      par le producteur) : le code est celui en vigueur à la DATE DE L''ACCIDENT,
+      il n''a pas été rétro-harmonisé sur un millésime unique.'
+    pieges:
+    - 'PIÈGE DE MILLÉSIME (le plus coûteux sur ce champ) : les communes suisses fusionnent
+      en continu — environ 2 500 en 2011 contre environ 2 130 aujourd''hui. Plusieurs
+      centaines de codes présents dans les années anciennes n''existent plus, et un
+      même territoire apparaît sous des codes différents selon l''année. Une jointure
+      vers une table de population d''un millésime unique laisse ces codes sans correspondance
+      : en LEFT JOIN elle produit des populations nulles et des taux d''accidents
+      infinis ou tronqués ; en INNER JOIN elle fait DISPARAÎTRE silencieusement les
+      lignes concernées, préférentiellement sur les années anciennes et les petites
+      communes rurales, ce qui fabrique une fausse tendance à la baisse. Aucun message
+      d''erreur ne signale l''un ni l''autre.'
+    - 'PROCÉDURE OBLIGATOIRE avant toute analyse communale longitudinale ou toute
+      jointure : remapper les codes sur un millésime cible à l''aide de la liste historisée
+      des mutations de communes de l''OFS, puis contrôler que le nombre total d''accidents
+      est conservé après remappage (le total doit rester 267 761).'
+    - 'PIÈGE DE SÉRIE COMMUNALE : sans remappage, une série temporelle ''accidents
+      de la commune X'' se rompt à chaque fusion — la commune absorbée cesse d''apparaître
+      et l''absorbante enregistre un saut d''effectif qui n''est pas un saut d''accidentalité.'
+    - 'PIÈGE DE ZÉRO DE TÊTE : les communes des cantons à numéro BFS bas sont stockées
+      ''0261'', ''0230'', ''0351'', ''0371'', ''0942''. Un cast en entier (ou un passage
+      par Excel/CSV sans typage explicite) supprime le zéro et casse toute jointure
+      vers un référentiel OFS zéro-padé ; l''échec est silencieux, il se traduit par
+      des communes ''non appariées'' et non par une erreur. Traiter exclusivement
+      en texte, comparaison exacte sur 4 caractères.'
+    - 'PIÈGE DE DÉNOMINATEUR : le nombre brut d''accidents par commune suit la population
+      et le trafic. Un classement des ''communes les plus dangereuses'' sans normalisation
+      place mécaniquement les grandes villes en tête ; les communes traversées par
+      une autoroute cumulent en outre des accidents dont les usagers ne résident pas
+      sur place.'
+    - 'PIÈGE DE PETITS EFFECTIFS : avec 2 091 codes pour 267 761 accidents, la médiane
+      communale se situe à quelques dizaines d''accidents sur quinze ans. Tout taux
+      calculé à ce niveau (surtout sur la classe `as1`, 1,3 % des lignes) est dominé
+      par le bruit d''échantillonnage ; agréger sur plusieurs années ou remonter au
+      canton avant toute comparaison.'
+    - 'Ne jamais dériver le canton depuis les premiers chiffres du code communal :
+      la correspondance n''est pas positionnelle. Utiliser `CantonCode`, présent dans
+      le jeu.'
+    type_retenu: categorical (code textuel à zéro de tête, PAS un entier)
+    usages_invalides:
+    - Jointure directe à une table de population, de superficie ou de parc de véhicules
+      d'un millésime unique, sans remappage préalable.
+    - Série temporelle communale brute sur 2011–2025.
+    usages_valides:
+    - Localiser un accident dans le découpage administratif tel qu'il existait au
+      moment des faits.
+    - Agréger par commune sur une période courte, où les mutations sont rares et vérifiables.
+    - Analyse longitudinale APRÈS remappage explicite sur un millésime cible.
+  RoadType:
+    description: Catégorie de la route sur laquelle l'accident s'est produit.
+    modalites:
+      rt430: Autoroute (8,94 %)
+      rt431: Semi-autoroute (0,82 %)
+      rt432: Route principale (49,54 %)
+      rt433: Route secondaire (36,99 %)
+      rt434: Installation annexe d'autoroute (0,10 %)
+      rt439: Autre (3,61 %)
+    pieges:
+    - 'Codes non contigus : `rt435`–`rt438` sont absents et `rt439` est le résiduel
+      ''autre'' — ne pas traiter la suite numérique comme une échelle ordonnée ni
+      interpoler.'
+    - 'Fortement déséquilibré : `rt434` ne représente que ~270 lignes sur 267 761
+      ; tout croisement fin sur cette modalité produit des taux instables.'
+    type_retenu: categorical (code textuel)
+  RoadType_de:
+    description: Libellé allemand de `RoadType`. Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code.
+    type_retenu: categorical (libellé)
+  RoadType_en:
+    description: Libellé anglais de `RoadType`. Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code.
+    type_retenu: categorical (libellé)
+  RoadType_fr:
+    description: Libellé français de `RoadType`. Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code. 'installation annexe' = aire de repos
+      / bretelle de service, pas une route ouverte.
+    type_retenu: categorical (libellé)
+  RoadType_it:
+    description: Libellé italien de `RoadType`. Redondant avec le code.
+    pieges:
+    - Colonne d'affichage ; grouper sur le code.
+    type_retenu: categorical (libellé)
+  _indicateurs_usagers:
+    description: 'Note transversale sur les trois colonnes `AccidentInvolvingPedestrian`,
+      `AccidentInvolvingBicycle` et `AccidentInvolvingMotorcycle`. Sémantique ratifiée
+      : implication large (présence de l''usager dans l''accident), et non victimisation.'
+    pieges:
+    - 'Les trois drapeaux NE FORMENT PAS une partition : leur somme n''atteint que
+      57,1 % des lignes et ils peuvent être vrais simultanément (collision vélo/moto,
+      piéton renversé par un cycle). Ne jamais les additionner pour obtenir un total
+      d''accidents par mode, ni construire une variable ''mode unique'' par priorité
+      arbitraire sans documenter la règle.'
+    - Il n'existe AUCUN indicateur pour les automobilistes, les poids lourds, les
+      transports publics ou les engins agricoles. 'Aucun drapeau à vrai' (~43 % à
+      50 % des lignes selon les recouvrements) est un résiduel hétérogène, PAS une
+      catégorie 'accident entre voitures'.
+    - 'Ces drapeaux marquent une implication, pas une victimisation : combinés à `AccidentSeverityCategory`,
+      ils qualifient la gravité de l''ACCIDENT, jamais celle de l''usager du mode
+      considéré.'
+    - 'Frontière de catégorie à documenter dans toute publication : e-bikes sous `Bicycle`,
+      cyclomoteurs sous `Motorcycle`.'
+    type_retenu: note transversale (pas une colonne du fichier)
+dataset: RoadTrafficAccidentLocations
+titre: Localisation des accidents de la circulation routière en Suisse (2011–2025)
